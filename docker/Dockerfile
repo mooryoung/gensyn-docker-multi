@@ -21,7 +21,8 @@ RUN git clone --depth 1 https://github.com/gensyn-ai/rl-swarm /opt/rl-swarm
 WORKDIR /opt/rl-swarm
 
 # ---- copy entrypoint --------------------------------------------------------
-COPY docker/entrypoint.sh /entrypoint.sh
+
+COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 EXPOSE 38331
