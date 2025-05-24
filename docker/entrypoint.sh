@@ -19,5 +19,5 @@ if [ ! -d ".venv" ]; then
 fi
 source .venv/bin/activate
 
-# Start the node
-exec ./run_rl_swarm.sh
+# ----- auto-reply to interactive setup -----
+printf "Y\nA\n0.5\nN\n" | ./run_rl_swarm.sh
