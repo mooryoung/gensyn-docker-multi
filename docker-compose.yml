@@ -1,0 +1,33 @@
+# docker-compose.yml
+#
+# Single-node test compose file.
+# Each container gets 20 vCPU and 20 GiB RAM limits.
+
+version: "3.9"
+
+services:
+  node1:
+    build: ./docker
+    container_name: gensyn-test1
+
+    # Runtime environment
+    environment:
+      P2P_PORT: 38331        # forwarded outside
+      SWARM_UI_PORT: 8000    # internal UI port (optional)
+
+    volumes:
+      - "./data/node1:/rl-swarm"
+
+    # Publish ports: P2P + optional UI
+    ports:
+      - "38331:38331"        # P2P port exposed publicly
+      - "13001:8000"         # UI; remove if you don't need it
+
+    deploy:
+      resources:
+        limits:
+          cpus: "20.0"
+          memory: 20g
+
+    ulimits:
+      nofile: 65536
