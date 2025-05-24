@@ -20,4 +20,4 @@ fi
 source .venv/bin/activate
 
 # ----- auto-reply to interactive setup -----
-printf "Y\nA\n0.5\nN\n" | ./run_rl_swarm.sh
+printf "Y\nA\n0.5\nN\n" | ./run_rl_swarm.sh 
