@@ -16,7 +16,7 @@ services:
       SWARM_UI_PORT: 8000    # internal UI port (optional)
 
     volumes:
-      - "./data/node1:/rl-swarm"
+      - "./data/node1/modal-login/temp-data:/opt/rl-swarm/modal-login/temp-data"
 
     # Publish ports: P2P + optional UI
     ports:
