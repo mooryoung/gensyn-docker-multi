@@ -7,7 +7,7 @@ version: "3.9"
 
 services:
   node1:
-    image: ghcr.io/ashishki/gensyn-node:cpu-2.7.0   # ← after you push
+    image: ghcr.io/ashishki/gensyn-node:cpu-2.7.1   # ← after you push
     container_name: gensyn-test1
 
     environment:
@@ -16,7 +16,10 @@ services:
 
     # mount only keys
     volumes:
+    # JSON
       - "./data/node1/modal-login/temp-data:/opt/rl-swarm/modal-login/temp-data"
+    # swarm.pem
+      - "./identities/node1/swarm.pem:/opt/rl-swarm/swarm.pem"
 
     ports:
       - "38331:38331"
@@ -28,3 +31,11 @@ services:
           cpus: "20.0"
           memory: 20g
 
+    cpuset: "0-19"
+    
+    # restart: on-failure
+
+    # optional:
+    dns:
+       - 8.8.8.8
+       - 1.1.1.1

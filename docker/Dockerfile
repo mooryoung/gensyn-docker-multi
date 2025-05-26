@@ -31,6 +31,11 @@ RUN python3 -m pip install --upgrade pip && \
 RUN git clone --depth 1 https://github.com/gensyn-ai/rl-swarm /opt/rl-swarm
 WORKDIR /opt/rl-swarm
 
+# ---- Pre-install modal-login dependencies ---------------
+WORKDIR /opt/rl-swarm/modal-login          
+RUN yarn install --network-timeout 100000  
+WORKDIR /opt/rl-swarm                      
+
 # --- overwrite the default CPU config ---------------------------------------------
 COPY docker/grpo-qwen-0.5b-cpu.yaml \
      hivemind_exp/configs/mac/grpo-qwen-2.5-0.5b-deepseek-r1.yaml
