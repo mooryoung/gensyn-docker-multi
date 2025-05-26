@@ -28,6 +28,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN git clone --depth 1 https://github.com/gensyn-ai/rl-swarm /opt/rl-swarm
 WORKDIR /opt/rl-swarm
 
+ # **Override the GPU YAML with your CPU-only version**
+COPY docker/grpo-qwen-0.5b-cpu.yaml \
+     /opt/rl-swarm/hivemind_exp/configs/mac/grpo-qwen-2.5-0.5b-deepseek-r1.yaml
+
 # 6) Pre-install Python dependencies into a .venv (including torch)
 RUN python3 -m venv .venv && \
     . .venv/bin/activate && \

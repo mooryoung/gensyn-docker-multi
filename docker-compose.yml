@@ -1,6 +1,6 @@
 services:
   node1:
-    image: ghcr.io/ashishki/gensyn-node:cpu-2.7.3
+    image: ghcr.io/ashishki/gensyn-node:cpu-2.7.5
     container_name: gensyn-test1
 
     # 4 environment variables, each on its own line:
