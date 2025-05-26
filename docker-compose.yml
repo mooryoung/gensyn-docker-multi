@@ -1,39 +1,30 @@
-# docker-compose.yml
-#
-# Single-node test compose file.
-# Each container gets 20 vCPU and 20 GiB RAM limits.
-
-version: "3.9"
-
 services:
   node1:
-    image: ghcr.io/ashishki/gensyn-node:cpu-2.7.1   # ← after you push
+    image: ghcr.io/ashishki/gensyn-node:cpu-2.7.1
     container_name: gensyn-test1
 
+    # 4 environment variables, each on its own line:
     environment:
-      P2P_PORT: 38331
-      CPU_ONLY: "1"          # force the CPU branch
+      - P2P_PORT=38331
+      - CPU_ONLY=1
 
-    # mount only keys
+    # mount JSON keys and persistent identity
     volumes:
-    # JSON
       - "./data/node1/modal-login/temp-data:/opt/rl-swarm/modal-login/temp-data"
-    # swarm.pem
       - "./identities/node1/swarm.pem:/opt/rl-swarm/swarm.pem"
 
     ports:
       - "38331:38331"
-      - "13001:8000"         # UI (optional)
 
+    restart: on-failure
+
+    # Pin and limit to the first 20 cores
+    cpuset: "0-19"
     deploy:
       resources:
         limits:
           cpus: "20.0"
-          memory: 20g
 
-    cpuset: "0-19"
-    
-    # restart: on-failure
 
     # optional:
     dns:
