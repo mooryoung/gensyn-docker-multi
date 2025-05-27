@@ -67,7 +67,7 @@ services:
     volumes:
       - "./data/node3/modal-login/temp-data:/opt/rl-swarm/modal-login/temp-data"
       - "./identities/node3/swarm.pem:/opt/rl-swarm/swarm.pem"
-      - "./docker/run_rl_swarm.sh:/opt/rl-swarm/run_rl_swarm.sh:ro"
+      - "./run_rl_swarm_json_save.sh:/opt/rl-swarm/run_rl_swarm.sh:ro"
 
     ports:
       - "38333:38333"
@@ -96,7 +96,7 @@ services:
     volumes:
       - "./data/node4/modal-login/temp-data:/opt/rl-swarm/modal-login/temp-data"
       - "./identities/node4/swarm.pem:/opt/rl-swarm/swarm.pem"
-      - "./docker/run_rl_swarm.sh:/opt/rl-swarm/run_rl_swarm.sh:ro"
+      - "./run_rl_swarm_json_save.sh:/opt/rl-swarm/run_rl_swarm.sh:ro"
 
     ports:
       - "38334:38334"
