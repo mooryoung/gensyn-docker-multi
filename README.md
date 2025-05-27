@@ -144,7 +144,7 @@ docker images | grep gensyn-node
 ### Step 1: Prepare Infrastructure
 ```bash
 # Clone repository
-git clone https://github.com/YOURNAME/gensyn-docker-multi.git
+git clone https://github.com/ashishki/gensyn-docker-multi.git
 cd gensyn-docker-multi
 
 # Prepare nodes (example: 3 nodes)
@@ -436,7 +436,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Primary Setup Guide**: [https://teletype.in/@sng_dao/gensyn2](https://teletype.in/@sng_dao/gensyn2)
 - **Original Repository**: [gensyn-ai/rl-swarm](https://github.com/gensyn-ai/rl-swarm)
-- **Issues**: [GitHub Issues](https://github.com/YOURNAME/gensyn-docker-multi/issues)
+- **Issues**: [GitHub Issues](https://github.com/ashishki/gensyn-docker-multi/issues)
 
 ---
 
