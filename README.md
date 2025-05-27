@@ -105,7 +105,7 @@ chmod +x prepare-nodes.sh
 - ✅ Sets up volume mounts and environment variables
 - ✅ Automatically calculates P2P ports (38331, 38332, 38333, etc.)
 
-### Directory Structure (Auto-Generated)
+### Directory Structure 
 ```
 gensyn-docker-multi/
 ├── data/                               # Auto-created by prepare-nodes.sh
@@ -120,10 +120,7 @@ gensyn-docker-multi/
 │   ├── Dockerfile
 │   ├── entrypoint.sh
 │   └── grpo-qwen-0.5b-cpu.yaml
-├── scripts/
-│   ├── setup-node1.sh
-│   ├── setup-node2.sh
-│   └── prepare-nodes.sh               # Main preparation script
+│── prepare-nodes.sh               # Main preparation script
 ├── run_rl_swarm_json_save.sh
 ├── docker-compose.yml                  # Auto-generated
 └── README.md
@@ -462,7 +459,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Primary Setup Guide**: [https://teletype.in/@sng_dao/gensyn2](https://teletype.in/@sng_dao/gensyn2)
 - **Original Repository**: [gensyn-ai/rl-swarm](https://github.com/gensyn-ai/rl-swarm)
-- **Issues**: [GitHub Issues](https://github.com/YOURNAME/gensyn-docker-multi/issues)
+- **Issues**: [GitHub Issues](https://github.com/ashishki/gensyn-docker-multi/issues)
 
 ---
 

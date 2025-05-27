@@ -4,7 +4,7 @@ set -euo pipefail
 # Usage: ./prepare-nodes.sh 3
 # Will prepare data/ and identities/ for node1..node3
 # and generate a docker-compose.yml with ports 38331–38333
-# and cpuset ranges 0–19,20–39,40–59
+# and cpuset ranges 0–19,20–39,40–59, and setup scripts.
 
 if [ $# -ne 1 ]; then
   echo "Usage: $0 <number_of_nodes>"
@@ -14,6 +14,7 @@ fi
 N=$1
 BASE_PORT=38331
 CORES_PER_NODE=20
+IMAGE="ghcr.io/ashishki/gensyn-node:cpu-2.7.5"
 
 # 1) Clean out old compose (if you like) then start a fresh one
 cat > docker-compose.yml <<EOF
@@ -34,7 +35,7 @@ for ((i=1; i<=N; i++)); do
   # B) Append the service block
   cat >> docker-compose.yml <<EOB
   $SVC:
-    image: ghcr.io/ashishki/gensyn-node:cpu-2.7.5
+    image: $IMAGE
     container_name: gensyn-test$i
 
     environment:
@@ -61,9 +62,63 @@ for ((i=1; i<=N; i++)); do
        - 1.1.1.1
 
 EOB
+
+  # C) Generate the setup script for each node
+  cat > setup-$SVC.sh <<EOS
+#!/usr/bin/env bash
+set -euo pipefail
+
+SERVICE=$SVC
+CONTAINER=bootstrap-\$SERVICE
+IDENT_DIR=./identities/\$SERVICE
+IMAGE=$IMAGE
+P2P_PORT=$PORT
+
+mkdir -p "\$IDENT_DIR"
+
+if [ -f "\$IDENT_DIR/swarm.pem" ]; then
+  echo "✅ Identity exists → starting via Compose"
+  docker compose up -d "\$SERVICE"
+  exit 0
+fi
+
+echo "🔄 No identity found: bootstrapping \$SERVICE via 'docker run'…"
+
+docker run -d --name "\$CONTAINER" \\
+  -e CPU_ONLY=1 \\
+  -e P2P_PORT=\$P2P_PORT \\
+  -p \$P2P_PORT:\$P2P_PORT \\
+  -v "\$(pwd)/data/\$SERVICE/modal-login/temp-data":/opt/rl-swarm/modal-login/temp-data \\
+  \$IMAGE \\
+  bash -c 'source .venv/bin/activate && printf "Y\nA\n0.5\nN\n" | ./run_rl_swarm.sh'
+
+echo "⏳ Waiting for /opt/rl-swarm/swarm.pem in \$CONTAINER…"
+while ! docker exec "\$CONTAINER" test -f /opt/rl-swarm/swarm.pem; do
+  sleep 2
+done
+echo "✅ Detected swarm.pem inside container"
+
+echo "⏹ Stopping \$CONTAINER"
+docker stop "\$CONTAINER"
+
+echo "📂 Copying swarm.pem out to host (\$IDENT_DIR/swarm.pem)"
+rm -rf "\$IDENT_DIR/swarm.pem"
+docker cp "\$CONTAINER":/opt/rl-swarm/swarm.pem "\$IDENT_DIR/swarm.pem"
+chmod 600 "\$IDENT_DIR/swarm.pem"
+
+docker rm "\$CONTAINER"
+
+echo "🚀 Restarting \$SERVICE properly via Compose"
+docker compose up -d "\$SERVICE"
+
+echo "✅ \$SERVICE is up with its persistent identity key."
+EOS
+
+  chmod +x setup-$SVC.sh
 done
 
 echo "✅ Generated docker-compose.yml for $N nodes."
+echo "✅ Created setup scripts: setup-node1.sh ... setup-node$N.sh"
 echo "✅ Created data/ and identities/ subdirs for node1..node$N."
 echo
 echo "Next steps:"
