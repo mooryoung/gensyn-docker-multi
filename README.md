@@ -1,4 +1,4 @@
-# 🚀 Gensyn Multi-Node CPU Deployment
+#  Gensyn Multi-Node CPU Deployment
 
 **Stable Docker Guide for running multiple Gensyn nodes on a single server**
 
@@ -127,17 +127,27 @@ chmod 600 data/node*/modal-login/temp-data/*.json
 
 > **📝 Note**: The `swarm.pem` files will be auto-generated during bootstrap - no need to copy them manually!
 
-## 🏗️ Building Docker Image
+## 🐳 Docker Image
+
+The Docker image is already built and published. Simply pull it:
 
 ```bash
-# Build CPU image (use the same tag as in prepare-nodes.sh)
-docker build -t ghcr.io/ashishki/gensyn-node:cpu-2.7.5 -f docker/Dockerfile .
+# Pull the ready-to-use image
+docker pull ghcr.io/ashishki/gensyn-node:cpu-2.7.5
 
 # Verify image
 docker images | grep gensyn-node
 ```
 
 > **📝 Note**: The image tag `ghcr.io/ashishki/gensyn-node:cpu-2.7.5` is pre-configured in the generated `docker-compose.yml`
+
+### Building from Source (Optional)
+If you want to build the image yourself or make modifications:
+
+```bash
+# Build CPU image from source
+docker build -t ghcr.io/ashishki/gensyn-node:cpu-2.7.5 -f docker/Dockerfile .
+```
 
 ## 🚀 Quick Start Guide
 
@@ -152,7 +162,13 @@ chmod +x prepare-nodes.sh
 ./prepare-nodes.sh 3
 ```
 
-### Step 2: Add Your Keys
+### Step 2: Pull Docker Image
+```bash
+# Pull the ready-to-use image
+docker pull ghcr.io/ashishki/gensyn-node:cpu-2.7.5
+```
+
+### Step 3: Add Your Keys
 ```bash
 # Copy your JSON keys to each node
 cp /path/to/your/userApiKey.json data/node1/modal-login/temp-data/
@@ -165,11 +181,8 @@ cp /path/to/your/userData.json data/node2/modal-login/temp-data/
 chmod 600 data/node*/modal-login/temp-data/*.json
 ```
 
-### Step 3: Build & Deploy
+### Step 4: Bootstrap & Deploy
 ```bash
-# Build Docker image
-docker build -t ghcr.io/ashishki/gensyn-node:cpu-2.7.5 -f docker/Dockerfile .
-
 # Bootstrap nodes (generates swarm.pem for each)
 chmod +x scripts/setup-node*.sh
 ./scripts/setup-node1.sh
@@ -180,7 +193,7 @@ chmod +x scripts/setup-node*.sh
 docker compose up -d
 ```
 
-### Step 4: Monitor
+### Step 5: Monitor
 ```bash
 # Check status
 docker compose ps
