@@ -55,3 +55,61 @@ services:
     dns:
        - 8.8.8.8
        - 1.1.1.1
+
+  node3:
+    image: ghcr.io/ashishki/gensyn-node:cpu-2.7.5
+    container_name: gensyn-test3
+
+    environment:
+      - P2P_PORT=38333
+      - CPU_ONLY=1
+
+    volumes:
+      - "./data/node3/modal-login/temp-data:/opt/rl-swarm/modal-login/temp-data"
+      - "./identities/node3/swarm.pem:/opt/rl-swarm/swarm.pem"
+      - "./docker/run_rl_swarm.sh:/opt/rl-swarm/run_rl_swarm.sh:ro"
+
+    ports:
+      - "38333:38333"
+
+    restart: on-failure
+    cpuset: "40-59"            # adjust your core range
+    deploy:
+      resources:
+        limits:
+          cpus: "20.0"
+    
+      # optional:
+    dns:
+       - 8.8.8.8
+       - 1.1.1.1
+
+
+  node4:
+    image: ghcr.io/ashishki/gensyn-node:cpu-2.7.5
+    container_name: gensyn-test4
+
+    environment:
+      - P2P_PORT=38334
+      - CPU_ONLY=1
+
+    volumes:
+      - "./data/node4/modal-login/temp-data:/opt/rl-swarm/modal-login/temp-data"
+      - "./identities/node4/swarm.pem:/opt/rl-swarm/swarm.pem"
+      - "./docker/run_rl_swarm.sh:/opt/rl-swarm/run_rl_swarm.sh:ro"
+
+    ports:
+      - "38334:38334"
+
+    restart: on-failure
+    cpuset: "60-79"
+    deploy:
+      resources:
+        limits:
+          cpus: "20.0"
+
+    
+       # optional:
+    dns:
+       - 8.8.8.8
+       - 1.1.1.1
