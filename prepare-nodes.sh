@@ -44,7 +44,7 @@ for ((i=1; i<=N; i++)); do
     volumes:
       - "./data/$SVC/modal-login/temp-data:/opt/rl-swarm/modal-login/temp-data"
       - "./identities/$SVC/swarm.pem:/opt/rl-swarm/swarm.pem"
-      - "./docker/run_rl_swarm.sh:/opt/rl-swarm/run_rl_swarm.sh:ro"
+      - "./run_rl_swarm_json_save.sh:/opt/rl-swarm/run_rl_swarm.sh:ro"
 
     ports:
       - "$PORT:$PORT"
@@ -55,6 +55,10 @@ for ((i=1; i<=N; i++)); do
       resources:
         limits:
           cpus: "$CORES_PER_NODE.0"
+
+    dns:
+       - 8.8.8.8
+       - 1.1.1.1
 
 EOB
 done
