@@ -1,4 +1,4 @@
-# Gensyn Multi-Node CPU Deployment
+# 🚀 Gensyn Multi-Node CPU Deployment
 
 **Stable Docker Guide for running multiple Gensyn nodes on a single server**
 
@@ -79,33 +79,10 @@ docker images                          # List images
 docker ps -a                          # List all containers
 ```
 
-## 📁 Project Setup
+## 📁 Project Structure
 
-### Clone Repository
-```bash
-git clone https://github.com/YOURNAME/gensyn-docker-multi.git
-cd gensyn-docker-multi
-```
+After cloning and running the preparation script, your project will have this structure:
 
-### Automated Preparation
-We provide a convenient script that handles all the preparation work:
-
-```bash
-# Make the script executable
-chmod +x prepare-nodes.sh
-
-# Prepare infrastructure for N nodes (example: 3 nodes)
-./prepare-nodes.sh 3
-```
-
-### What `prepare-nodes.sh` Does
-- ✅ Creates directory structure for all nodes
-- ✅ Generates optimized `docker-compose.yml` with proper port allocation
-- ✅ Configures CPU affinity (20 cores per node: 0-19, 20-39, 40-59, etc.)
-- ✅ Sets up volume mounts and environment variables
-- ✅ Automatically calculates P2P ports (38331, 38332, 38333, etc.)
-
-### Directory Structure 
 ```
 gensyn-docker-multi/
 ├── data/                               # Auto-created by prepare-nodes.sh
@@ -459,7 +436,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Primary Setup Guide**: [https://teletype.in/@sng_dao/gensyn2](https://teletype.in/@sng_dao/gensyn2)
 - **Original Repository**: [gensyn-ai/rl-swarm](https://github.com/gensyn-ai/rl-swarm)
-- **Issues**: [GitHub Issues](https://github.com/ashishki/gensyn-docker-multi/issues)
+- **Issues**: [GitHub Issues](https://github.com/YOURNAME/gensyn-docker-multi/issues)
 
 ---
 
