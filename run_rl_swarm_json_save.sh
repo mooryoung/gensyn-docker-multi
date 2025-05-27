@@ -1,5 +1,7 @@
 set -euo pipefail
 
+ROOT="$PWD"
+
 # ROOT_DIR — абсолютный путь на корень клонированного rl-swarm
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
