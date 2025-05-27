@@ -15,6 +15,12 @@ docker compose up -d "$SERVICE"
 echo "→ 2) Waiting for 'Training  loop starting…' in logs"
 docker logs -f "$CONTAINER" | sed -n '/Training  loop starting/ q'
 
+
+# If someone accidentally created a directory there, remove it—otherwise leave the file intact
+if [ -d "$IDENT_DIR/swarm.pem" ]; then
+    rm -rf "$IDENT_DIR/swarm.pem"
+fi
+
 echo "→ 3) Copying generated swarm.pem to host → $IDENT_DIR/swarm.pem"
 docker cp "$CONTAINER":/opt/rl-swarm/swarm.pem "$IDENT_DIR"/swarm.pem
 
