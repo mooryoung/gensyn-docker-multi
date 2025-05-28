@@ -10,6 +10,13 @@
 
 set -e
 
+# --------------- PATCH: increase startup_timeout for hivemind ----------------
+# This ensures the DHT daemon has more time to start (fixes some network errors)
+sed -i -E 's/(startup_timeout: *float *= *)[0-9.]+/\1120/' .venv/lib/python3.10/site-packages/hivemind/p2p/p2p_daemon.py || true
+sed -i -E 's/(startup_timeout: *float *= *)[0-9.]+/\1120/' .venv/lib/python3.10/site-packages/hivemind/dht/dht.py || true
+sed -i 's/startup_timeout=30/startup_timeout=120/g' /opt/rl-swarm/hivemind_exp/runner/*py || true
+#
+./setup-node1.sh
 # Configure multiaddr so Hivemind binds to 0.0.0.0 on the desired port.
 export HOST_MULTI_ADDRS="/ip4/0.0.0.0/tcp/${P2P_PORT:-38331}"
 
@@ -19,11 +26,7 @@ if [ ! -d ".venv" ]; then
 fi
 source .venv/bin/activate
 
-# --------------- PATCH: increase startup_timeout for hivemind ----------------
-# This ensures the DHT daemon has more time to start (fixes some network errors)
-sed -i -E 's/(startup_timeout: *float *= *)[0-9.]+/\1120/' .venv/lib/python3.10/site-packages/hivemind/p2p/p2p_daemon.py || true
-sed -i -E 's/(startup_timeout: *float *= *)[0-9.]+/\1120/' .venv/lib/python3.10/site-packages/hivemind/dht/dht.py || true
-sed -i 's/startup_timeout=30/startup_timeout=120/g' /opt/rl-swarm/hivemind_exp/runner/*py || true
+
 
 
 # ----- auto-reply to interactive setup -----
