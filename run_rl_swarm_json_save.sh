@@ -1,5 +1,9 @@
 set -euo pipefail
 
+sed -i 's/startup_timeout: float = 15/startup_timeout: float = 120/' .venv/lib/python3.10/site-packages/hivemind/p2p/p2p_daemon.py
+find .venv/lib/python3.10/site-packages/hivemind/ -name "*.pyc" -delete
+
+
 ROOT="$PWD"
 
 # ROOT_DIR — абсолютный путь на корень клонированного rl-swarm
