@@ -189,17 +189,17 @@ chmod +x scripts/setup-node*.sh
 ./scripts/setup-node2.sh
 ./scripts/setup-node3.sh
 
-# Start all nodes
-docker compose up -d
+# Start all nodes one by one
+./setup-node1.sh ....etc
 ```
 
 ### Step 5: Monitor
 ```bash
 # Check status
-docker compose ps
+docker  ps
 
 # View logs
-docker compose logs -f
+docker logs -f gensyn-test?
 ```
 
 ## ⚙️ Docker Compose Configuration
@@ -369,8 +369,8 @@ docker compose pull
 # Restart specific node
 docker compose up -d node1
 
-# Or restart all nodes
-docker compose up -d
+# Or restart nodes
+docker restast gensyn-test?
 ```
 
 ### Backup Important Files
