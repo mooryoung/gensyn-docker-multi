@@ -4,7 +4,7 @@ set -euo pipefail
 # Usage: ./prepare-nodes.sh 3
 # Will prepare data/ and identities/ for node1..node3
 # and generate a docker-compose.yml with ports 38331–38333
-# and cpuset ranges 0–19,20–39,40–59, and setup scripts.
+# and cpuset ranges 0–19,20–39,40–59, а также setup-скрипты для каждой ноды.
 
 if [ $# -ne 1 ]; then
   echo "Usage: $0 <number_of_nodes>"
@@ -16,7 +16,6 @@ BASE_PORT=38331
 CORES_PER_NODE=20
 IMAGE="ghcr.io/ashishki/gensyn-node:cpu-2.7.5"
 
-# 1) Clean out old compose (if you like) then start a fresh one
 cat > docker-compose.yml <<EOF
 version: "3.9"
 services:
@@ -56,10 +55,6 @@ for ((i=1; i<=N; i++)); do
       resources:
         limits:
           cpus: "$CORES_PER_NODE.0"
-
-    dns:
-       - 8.8.8.8
-       - 1.1.1.1
 
 EOB
 

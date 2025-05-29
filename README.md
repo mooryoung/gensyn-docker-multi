@@ -1,6 +1,4 @@
-#  Gensyn Multi-Node CPU Deployment
-
-!!! ATTENTION , use git fetch git checkout 27fc06d, nodes 2-5 setup until next fix
+# 🚀 Gensyn Multi-Node CPU Deployment
 
 **Stable Docker Guide for running multiple Gensyn nodes on a single server**
 
