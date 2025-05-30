@@ -4,7 +4,7 @@ set -euo pipefail
 # Usage: ./prepare-nodes.sh 3
 # Will prepare data/ and identities/ for node1..node3
 # and generate a docker-compose.yml with ports 38331–38333
-# and cpuset ranges 0–19,20–39,40–59, а также setup-скрипты для каждой ноды.
+# and cpuset ranges 0–19,20–39,40–59
 
 if [ $# -ne 1 ]; then
   echo "Usage: $0 <number_of_nodes>"
