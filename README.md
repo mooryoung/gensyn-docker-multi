@@ -184,10 +184,7 @@ chmod 600 data/node*/modal-login/temp-data/*.json
 ### Step 4: Bootstrap & Deploy
 ```bash
 # Bootstrap nodes (generates swarm.pem for each)
-chmod +x scripts/setup-node*.sh
-./scripts/setup-node1.sh
-./scripts/setup-node2.sh
-./scripts/setup-node3.sh
+chmod +x setup-node*.sh
 
 # Start all nodes one by one
 ./setup-node1.sh ....etc
