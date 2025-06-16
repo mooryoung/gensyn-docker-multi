@@ -14,7 +14,7 @@ fi
 N=$1
 BASE_PORT=38331
 CORES_PER_NODE=20
-IMAGE="ghcr.io/ashishki/gensyn-node:cpu-2.7.6"
+IMAGE="ghcr.io/ashishki/gensyn-node:cpu-2.7.8"
 
 cat > docker-compose.yml <<EOF
 version: "3.9"
