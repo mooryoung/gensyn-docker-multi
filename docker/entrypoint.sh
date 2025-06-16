@@ -13,7 +13,7 @@ set -e
 # --------------- PATCH: increase startup_timeout for hivemind ----------------
 # This ensures the DHT daemon has more time to start (fixes some network errors)
 
-./setup-node1.sh
+#./setup-node1.sh
 # Configure multiaddr so Hivemind binds to 0.0.0.0 on the desired port.
 export HOST_MULTI_ADDRS="/ip4/0.0.0.0/tcp/${P2P_PORT:-38331}"
 

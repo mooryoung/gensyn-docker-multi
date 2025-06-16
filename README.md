@@ -25,7 +25,7 @@ cp your-keys/userData.json data/node1/modal-login/temp-data/
 # Repeat for node2, node3...
 
 # Pull pre-built image and launch farm
-docker pull ghcr.io/ashishki/gensyn-node:cpu-2.7.7
+docker pull ghcr.io/ashishki/gensyn-node:cpu-2.7.8
 # Give per,ission and start generated scripts
 chmod +x ALL SCRIPTS  .
 
