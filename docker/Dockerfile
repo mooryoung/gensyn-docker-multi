@@ -25,11 +25,8 @@ RUN mkdir -p /usr/share/keyrings \
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
  && apt-get update && apt-get install -y --no-install-recommends nodejs yarn
 
-# Set faster registries for China/mainland networks (via tool configs, not ENV)
-RUN yarn config set registry https://registry.npmmirror.com -g \
- && yarn config set network-timeout 600000 -g \
- && npm config set registry https://registry.npmmirror.com \
- && npm i -g cnpm --registry=https://registry.npmmirror.com || true
+# Optional: increase Yarn timeout to reduce transient errors
+RUN yarn config set network-timeout 600000 -g || true
 
 # 4) Clone rl-swarm (trackable)
 ARG RL_SWARM_REPO=https://github.com/gensyn-ai/rl-swarm
@@ -74,18 +71,12 @@ RUN python3 -m venv .venv \
 # Ensure package is importable if rl-swarm uses src layout
 ENV PYTHONPATH=/opt/rl-swarm
 
-# 7) Install modal-login UI dependencies (optional; enable with --build-arg INSTALL_MODAL_LOGIN=1)
-ARG INSTALL_MODAL_LOGIN=0
+# 7) Install modal-login UI dependencies
 WORKDIR /opt/rl-swarm/modal-login
-RUN if [ "$INSTALL_MODAL_LOGIN" = "1" ]; then \
-       yarn config set registry https://registry.npmmirror.com -g && \
-       yarn config set network-timeout 600000 -g && \
-       yarn install --network-timeout 600000 --prefer-offline && \
-       yarn add viem@2.25.0 --exact && \
-       yarn add next@latest --exact || true; \
-    else \
-       echo "Skipping modal-login deps at build time (INSTALL_MODAL_LOGIN=0)"; \
-    fi
+RUN yarn config set network-timeout 600000 -g \
+ && yarn install --network-timeout 600000 --prefer-offline \
+ && yarn add viem@2.25.0 --exact \
+ && yarn add next@latest --exact || true
 
 # 8) Copy entrypoint
 WORKDIR /opt/rl-swarm
