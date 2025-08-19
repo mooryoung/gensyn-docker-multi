@@ -59,6 +59,9 @@ RUN python3 -m venv .venv \
       sed -i 's|startup_timeout: float = 15|startup_timeout: float = 120|' "$SP/hivemind/p2p/p2p_daemon.py" || true; \
     fi
 
+# Ensure package is importable if rl-swarm uses src layout
+ENV PYTHONPATH=/opt/rl-swarm
+
 # 7) Install modal-login UI dependencies
 WORKDIR /opt/rl-swarm/modal-login
 RUN yarn install \
