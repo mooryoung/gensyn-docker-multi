@@ -73,18 +73,29 @@ RUN python3 -m venv .venv \
 # Ensure package is importable if rl-swarm uses src layout
 ENV PYTHONPATH=/opt/rl-swarm
 
-# 7) Install modal-login UI dependencies with fallback to npm
+# 7) Install modal-login UI dependencies with multi-registry + 3m per attempt
 WORKDIR /opt/rl-swarm/modal-login
 RUN set -eux; \
-    yarn config set registry https://registry.npmmirror.com -g; \
-    yarn config set network-timeout 600000 -g; \
-    npm config set registry https://registry.npmmirror.com; \
-    # Try Yarn first, kill after 10 minutes if it stalls, then fallback to npm
-    (timeout 600s yarn install --network-timeout 600000 --prefer-offline --no-progress || \
-     (echo 'Yarn install timed out, falling back to npm' && npm install --no-audit --no-fund --legacy-peer-deps)); \
-    # Ensure specific packages/versions
-    (yarn add viem@2.25.0 --exact || npm install viem@2.25.0 --save-exact); \
-    (yarn add next@latest --exact || npm install next@latest --save-exact) || true
+    registries="https://registry.npmmirror.com https://registry.yarnpkg.com https://registry.npmjs.org"; \
+    yarn config set network-timeout 180000 -g; \
+    success=0; \
+    for reg in $registries; do \
+      echo "Trying yarn registry: $reg"; \
+      yarn config set registry "$reg" -g; \
+      npm config set registry "$reg"; \
+      if timeout 180s yarn install --network-timeout 180000 --no-progress; then success=1; break; fi; \
+    done; \
+    if [ $success -eq 0 ]; then \
+      for reg in $registries; do \
+        echo "Falling back to npm with registry: $reg"; \
+        npm config set registry "$reg"; \
+        if timeout 180s npm install --no-audit --no-fund --legacy-peer-deps; then success=1; break; fi; \
+      done; \
+    fi; \
+    if [ $success -eq 0 ]; then echo "Dependency install failed across registries"; exit 1; fi; \
+    # Ensure specific packages/versions (also with 3m timeout + fallback)
+    (timeout 180s yarn add viem@2.25.0 --exact || timeout 180s npm install viem@2.25.0 --save-exact) || true; \
+    (timeout 180s yarn add next@latest --exact || timeout 180s npm install next@latest --save-exact) || true
 
 # 8) Copy entrypoint
 WORKDIR /opt/rl-swarm
