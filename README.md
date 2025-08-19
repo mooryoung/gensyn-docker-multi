@@ -27,7 +27,7 @@ docker compose logs -f
 
 
 
-### 容器管理（Container Management）
+### 🚀 容器管理（Container Management）
 ```bash
 # 生命周期
 docker compose up -d                 # 启动所有服务
@@ -41,7 +41,7 @@ docker compose down -v               # 停止全部并清理数据卷
 docker compose up -d --scale node1=0 # 临时停用 node1
 ```
 
-### 监控与排障（Monitoring & Troubleshooting）
+### 🗺️ 监控与排障（Monitoring & Troubleshooting）
 ```bash
 # 实时日志
 docker compose logs -f                    # 全部节点
@@ -57,7 +57,7 @@ docker compose ps                         # 容器状态
 netstat -tlnp | grep 38331               # 端口占用检查
 ```
 
-### 维护（Maintenance）
+### 🛠️ 维护（Maintenance）
 ```bash
 # 更新
 docker compose pull          # 拉取最新镜像

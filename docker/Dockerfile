@@ -4,7 +4,8 @@
 FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DEFAULT_TIMEOUT=180
 
 # 1) System dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -46,6 +47,7 @@ RUN cp /opt/rl-swarm/run_rl_swarm.sh /usr/local/bin/rlswarm_official.sh || true 
 RUN python3 -m venv .venv \
  && . .venv/bin/activate \
  && pip install --upgrade pip setuptools wheel \
+ && (pip install --only-binary=:all: hivemind || true) \
  && if [ -f requirements-cpu.txt ]; then pip install --no-cache-dir -r requirements-cpu.txt; \
     elif [ -f requirements.txt ]; then pip install --no-cache-dir -r requirements.txt; \
     elif [ -f pyproject.toml ]; then pip install --no-cache-dir .; \
