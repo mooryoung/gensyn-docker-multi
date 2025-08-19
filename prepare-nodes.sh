@@ -23,7 +23,6 @@ RL_SWARM_REF=${RL_SWARM_REF:-main}
 RL_SWARM_REPO=${RL_SWARM_REPO:-https://github.com/gensyn-ai/rl-swarm}
 
 cat > docker-compose.yml <<EOF
-version: "3.9"
 services:
 EOF
 

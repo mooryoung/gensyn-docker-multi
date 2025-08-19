@@ -27,4 +27,4 @@ source .venv/bin/activate
 
 
 # Launch RL-Swarm launcher (wrapper may be mounted over this path)
-./run_rl_swarm.sh
+exec bash ./run_rl_swarm.sh

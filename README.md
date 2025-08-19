@@ -24,13 +24,28 @@ cp your-keys/userApiKey.json data/node1/modal-login/temp-data/
 cp your-keys/userData.json data/node1/modal-login/temp-data/
 # Repeat for node2, node3...
 
-# Pull pre-built image and launch farm
-docker pull ghcr.io/ashishki/gensyn-node:cpu-2.7.8
-# Give per,ission and start generated scripts
-chmod +x ALL SCRIPTS  .
+# Build/run options
+
+# Option A: build against latest rl-swarm (default)
+docker compose build
+docker compose up -d node1
+./setup-node1.sh
+
+# Option B: pin to a specific rl-swarm release
+# Windows PowerShell example:
+$env:RL_SWARM_REF="v0.5.8"; docker compose build; docker compose up -d
+
+# Option C: use a prebuilt image instead of building
+# (regenerate compose with prebuilt image wiring)
+$env:USE_PREBUILT="1"
+./prepare-nodes.sh 3
+docker compose up -d
+
+# Give permissions to generated scripts if needed
+chmod +x *.sh
 
 # Monitor
-docker compose logs -f gensyn-test1  # Specific node
+docker compose logs -f node1
 ```
 
 ## 🎯 Why This Exists
@@ -147,11 +162,15 @@ chmod -R 600 data/node*/modal-login/temp-data/*.json
 ### 5. Container Launch
 
 ```bash
-# Pull optimized image
-docker pull ghcr.io/ashishki/gensyn-node:cpu-2.7.5
+# If building locally (default)
+docker compose build
 
-# Start nodes ONE BY ONE
-./setup-nodex.sh
+# If using prebuilt image
+# $env:USE_PREBUILT="1" (PowerShell) 或 export USE_PREBUILT=1 (Linux/macOS) 后重新运行 ./prepare-nodes.sh
+
+# Start nodes ONE BY ONE（示例）
+docker compose up -d node1 && ./setup-node1.sh
+docker compose up -d node2 && ./setup-node2.sh
 
 # Verify deployment
 docker compose ps
@@ -212,11 +231,17 @@ The toolkit generates optimized configurations:
 version: "3.9"
 services:
   node1:
-    image: ghcr.io/ashishki/gensyn-node:cpu-2.7.5
+    image: gensyn-node:local   # 或使用预构建镜像（当 USE_PREBUILT=1）
     container_name: gensyn-test1
     environment:
       - P2P_PORT=38331
       - CPU_ONLY=1
+      - NON_INTERACTIVE=1
+      - JOIN_TESTNET=true
+      - DISABLE_MODAL_LOGIN=1
+      - DISABLE_HF_PUSH=1
+      - SWARM=A
+      - PARAM_B=0.5
     ports:
       - "38331:38331"
     volumes:
@@ -237,6 +262,42 @@ services:
 - **Memory Limits**: Configurable per-node memory constraints  
 - **Network Isolation**: Dedicated P2P ports prevent conflicts
 - **Storage Strategy**: Persistent volumes for identity/state data
+
+## ⚙️ Non-interactive mode & environment variables
+
+本工具默认以非交互模式运行容器。可用变量如下（Compose 已自动注入合理默认）：
+
+- `NON_INTERACTIVE=1`：启用非交互模式
+- `JOIN_TESTNET=true|false`：是否连接 Testnet（默认 true）
+- `SWARM=A|B`：加入 Math(A) 或 Math Hard(B)（默认 A）
+- `PARAM_B=0.5|1.5|7|32|72`：选择模型规模（默认 0.5）
+- `DISABLE_MODAL_LOGIN=1`：禁用登录 UI，直接 P2P（默认 1）
+- `DISABLE_HF_PUSH=1`：禁用将模型推送到 HF（默认 1）
+- `CPU_ONLY=1`：仅 CPU 训练（默认 1）
+- `P2P_PORT`：对外 P2P 端口（按节点自增）
+
+如需 GPU，请移除 `CPU_ONLY` 并确保主机具备 NVIDIA 驱动与运行时，且满足 rl-swarm GPU 依赖要求。
+
+## 📌 Pin rl-swarm 版本
+
+构建时可通过构建参数固定到某一官方发布版本，例如 `v0.5.8`：
+
+```bash
+# PowerShell
+$env:RL_SWARM_REF="v0.5.8"; docker compose build; docker compose up -d
+
+# Linux/macOS
+export RL_SWARM_REF=v0.5.8
+docker compose build && docker compose up -d
+```
+
+如需使用其他 fork 或分支，可设置：
+
+```bash
+$env:RL_SWARM_REPO="https://github.com/gensyn-ai/rl-swarm"
+$env:RL_SWARM_REF="main"
+docker compose build && docker compose up -d
+```
 
 ## 🔐 Security & Best Practices
 
@@ -286,6 +347,21 @@ sudo ufw status
 # Verify key files exist and have correct permissions
 ls -la data/node1/modal-login/temp-data/
 chmod 600 data/node*/modal-login/temp-data/*.json
+```
+
+**Dockerfile parse error: unknown instruction: );**
+```bash
+# 说明：这是由于 Dockerfile 中出现多行 heredoc 风格的子进程片段导致的解析问题。
+# 已在当前版本改为单行 python -c。若仍报错，确认换行符不是 CRLF（Windows），并转为 LF：
+# PowerShell 强制 UTF-8 + LF 写回：
+(Get-Content docker/Dockerfile) | Set-Content -NoNewline -Encoding UTF8 docker/Dockerfile
+```
+
+**modal-login/viem 相关问题**
+```bash
+# 我们已在镜像构建阶段加装/锁定 viem=2.25.0 与最新 next，符合上游建议。
+# 若你在自定义镜像中手动改动依赖，请对齐：
+cd /opt/rl-swarm/modal-login && yarn add viem@2.25.0 --exact && yarn add next@latest --exact
 ```
 
 ### Debug Commands
