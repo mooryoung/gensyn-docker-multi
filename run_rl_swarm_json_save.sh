@@ -234,7 +234,7 @@ fi
 
 echo_green ">> Getting requirements..."
 
-pip install --upgrade pip
+pip install --upgrade pip setuptools wheel
 
 install_cpu_requirements() {
     if [ -f "$ROOT/requirements-cpu.txt" ]; then

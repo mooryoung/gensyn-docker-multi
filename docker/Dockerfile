@@ -8,7 +8,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 # 1) System dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      python3 python3-venv python3-pip \
+      python3 python3-venv python3-pip python3-dev \
+      build-essential pkg-config libffi-dev libssl-dev \
       git curl gnupg ca-certificates \
       nano
 
@@ -44,7 +45,7 @@ RUN cp /opt/rl-swarm/run_rl_swarm.sh /usr/local/bin/rlswarm_official.sh || true 
 # 6) Create virtual env and install dependencies
 RUN python3 -m venv .venv \
  && . .venv/bin/activate \
- && pip install --upgrade pip \
+ && pip install --upgrade pip setuptools wheel \
  && if [ -f requirements-cpu.txt ]; then pip install --no-cache-dir -r requirements-cpu.txt; \
     elif [ -f requirements.txt ]; then pip install --no-cache-dir -r requirements.txt; \
     elif [ -f pyproject.toml ]; then pip install --no-cache-dir .; \
