@@ -41,7 +41,10 @@ RUN set -eux; \
 RUN python3 -m venv .venv \
  && . .venv/bin/activate \
  && pip install --upgrade pip \
- && pip install --no-cache-dir -r requirements-cpu.txt \
+ && if [ -f requirements-cpu.txt ]; then pip install --no-cache-dir -r requirements-cpu.txt; \
+    elif [ -f requirements.txt ]; then pip install --no-cache-dir -r requirements.txt; \
+    elif [ -f pyproject.toml ]; then pip install --no-cache-dir .; \
+    else echo 'No requirements[-cpu].txt or requirements.txt or pyproject.toml found; skipping base deps'; fi \
  && set -eux; \
     if [ -f hivemind_exp/runner/grpo_runner.py ]; then \
       sed -i 's|dht = hivemind.DHT(start=True, startup_timeout=30, \*\*self._dht_kwargs(grpo_args))|dht = hivemind.DHT(start=True, ensure_bootstrap_success=False, startup_timeout=120, **self._dht_kwargs(grpo_args))|' hivemind_exp/runner/grpo_runner.py || true; \

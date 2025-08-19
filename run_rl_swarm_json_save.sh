@@ -234,15 +234,40 @@ fi
 echo_green ">> Getting requirements..."
 
 pip install --upgrade pip
+
+install_cpu_requirements() {
+    if [ -f "$ROOT/requirements-cpu.txt" ]; then
+        pip install -r "$ROOT/requirements-cpu.txt"
+        return 0
+    elif [ -f "$ROOT/requirements.txt" ]; then
+        pip install -r "$ROOT/requirements.txt"
+        return 0
+    else
+        echo "No requirements-cpu.txt or requirements.txt found. Assuming deps preinstalled."
+        return 0
+    fi
+}
+
+install_gpu_requirements() {
+    if [ -f "$ROOT/requirements-gpu.txt" ]; then
+        pip install -r "$ROOT/requirements-gpu.txt"
+    elif [ -f "$ROOT/requirements.txt" ]; then
+        pip install -r "$ROOT/requirements.txt"
+    else
+        echo "No GPU/standard requirements file found. Assuming deps preinstalled."
+    fi
+    # Optional GPU extra
+    pip install flash-attn --no-build-isolation || true
+}
+
 if [ -n "$CPU_ONLY" ] || ! command -v nvidia-smi &> /dev/null; then
     # CPU-only mode or no NVIDIA GPU found
-    pip install -r "$ROOT"/requirements-cpu.txt
+    install_cpu_requirements
     CONFIG_PATH="$ROOT/hivemind_exp/configs/mac/grpo-qwen-2.5-0.5b-deepseek-r1.yaml" # TODO: Fix naming.
     GAME="gsm8k"
 else
     # NVIDIA GPU found
-    pip install -r "$ROOT"/requirements-gpu.txt
-    pip install flash-attn --no-build-isolation
+    install_gpu_requirements
 
     case "$PARAM_B" in
         32 | 72) CONFIG_PATH="$ROOT/hivemind_exp/configs/gpu/grpo-qwen-2.5-${PARAM_B}b-bnb-4bit-deepseek-r1.yaml" && break ;;
