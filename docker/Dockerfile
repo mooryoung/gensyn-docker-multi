@@ -65,11 +65,19 @@ RUN python3 -m venv .venv \
 # Ensure package is importable if rl-swarm uses src layout
 ENV PYTHONPATH=/opt/rl-swarm
 
-# 7) Install modal-login UI dependencies
+# 7) Install modal-login UI dependencies (optional)
+ARG SKIP_MODAL_LOGIN=1
 WORKDIR /opt/rl-swarm/modal-login
-RUN yarn install \
- && yarn add viem@2.25.0 --exact \
- && yarn add next@latest --exact || true
+RUN if [ "$SKIP_MODAL_LOGIN" != "1" ]; then \
+      yarn config set network-timeout 600000 -g \
+   && yarn config set registry https://registry.npmmirror.com -g \
+   && npm config set registry https://registry.npmmirror.com \
+   && yarn install --network-timeout 600000 --prefer-offline \
+   && yarn add viem@2.25.0 --exact \
+   && yarn add next@latest --exact || true; \
+    else \
+      echo "Skipping modal-login dependency install during build"; \
+    fi
 
 # 8) Copy entrypoint
 WORKDIR /opt/rl-swarm

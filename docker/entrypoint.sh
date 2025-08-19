@@ -27,4 +27,5 @@ source .venv/bin/activate
 
 
 # Launch RL-Swarm launcher (now upstream script is mounted at this path)
-exec bash ./run_rl_swarm.sh
+# exec bash ./run_rl_swarm.sh
+printf "\n\n\n\n" | ./run_rl_swarm.sh 

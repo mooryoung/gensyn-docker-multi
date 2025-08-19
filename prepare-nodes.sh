@@ -65,7 +65,6 @@ EOB
     volumes:
       - "./data/$SVC/modal-login/temp-data:/opt/rl-swarm/modal-login/temp-data"
       - "./identities/$SVC/swarm.pem:/opt/rl-swarm/swarm.pem"
-      - "./run_rl_swarm.sh:/opt/rl-swarm/run_rl_swarm.sh:ro"
 
     ports:
       - "$PORT:$PORT"
