@@ -74,31 +74,13 @@ RUN python3 -m venv .venv \
 # Ensure package is importable if rl-swarm uses src layout
 ENV PYTHONPATH=/opt/rl-swarm
 
-# 7) Install modal-login UI dependencies (npm-first, npmmirror, retries, 180s per attempt)
+# 7) Install modal-login UI dependencies (simple yarn install with mirror + long timeout)
 WORKDIR /opt/rl-swarm/modal-login
-RUN set -eux; \
-    npm config set registry https://registry.npmmirror.com; \
-    npm config set fund false; npm config set audit false; \
-    success=0; \
-    for i in 1 2 3; do \
-      echo "npm install attempt $i ..."; \
-      if timeout 180s npm install --no-audit --no-fund --legacy-peer-deps --no-optional; then success=1; break; fi; \
-      sleep 3; \
-    done; \
-    if [ $success -eq 0 ]; then \
-      echo "npm failed, trying yarn (with npmmirror) ..."; \
-      yarn config set registry https://registry.npmmirror.com -g; \
-      yarn config set network-timeout 180000 -g; \
-      for i in 1 2 3; do \
-        echo "yarn install attempt $i ..."; \
-        if timeout 180s yarn install --no-progress --ignore-optional; then success=1; break; fi; \
-        sleep 3; \
-      done; \
-    fi; \
-    if [ $success -eq 0 ]; then echo "Dependency install failed after retries"; exit 1; fi; \
-    # Pin/ensure specific packages after base install
-    (timeout 180s npm install viem@2.25.0 --save-exact || timeout 180s yarn add viem@2.25.0 --exact) || true; \
-    (timeout 180s npm install next@latest --save-exact || timeout 180s yarn add next@latest --exact) || true
+RUN yarn config set registry https://registry.npmmirror.com -g \
+ && yarn config set network-timeout 600000 -g \
+ && yarn install --network-timeout 600000 --prefer-offline \
+ && yarn add viem@2.25.0 --exact \
+ && yarn add next@latest --exact || true
 
 # 8) Copy entrypoint
 WORKDIR /opt/rl-swarm
