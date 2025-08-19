@@ -24,22 +24,10 @@ cp your-keys/userApiKey.json data/node1/modal-login/temp-data/
 cp your-keys/userData.json data/node1/modal-login/temp-data/
 # Repeat for node2, node3...
 
-# Build/run options
-
-# Option A: build against latest rl-swarm (default)
+# Build/run (always local build)
 docker compose build
 docker compose up -d node1
 ./setup-node1.sh
-
-# Option B: pin to a specific rl-swarm release
-# Windows PowerShell example:
-$env:RL_SWARM_REF="v0.5.8"; docker compose build; docker compose up -d
-
-# Option C: use a prebuilt image instead of building
-# (regenerate compose with prebuilt image wiring)
-$env:USE_PREBUILT="1"
-./prepare-nodes.sh 3
-docker compose up -d
 
 # Give permissions to generated scripts if needed
 chmod +x *.sh
@@ -164,9 +152,6 @@ chmod -R 600 data/node*/modal-login/temp-data/*.json
 ```bash
 # If building locally (default)
 docker compose build
-
-# If using prebuilt image
-# $env:USE_PREBUILT="1" (PowerShell) 或 export USE_PREBUILT=1 (Linux/macOS) 后重新运行 ./prepare-nodes.sh
 
 # Start nodes ONE BY ONE（示例）
 docker compose up -d node1 && ./setup-node1.sh

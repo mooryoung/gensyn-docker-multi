@@ -15,9 +15,7 @@ N=$1
 BASE_PORT=38331
 CORES_PER_NODE=20
 
-# Build options
-USE_PREBUILT=${USE_PREBUILT:-0}
-IMAGE_PREBUILT=${IMAGE_PREBUILT:-ghcr.io/ashishki/gensyn-node:cpu-2.7.8}
+# Build options (always build locally)
 IMAGE_LOCAL_TAG=${IMAGE_LOCAL_TAG:-gensyn-node:local}
 RL_SWARM_REF=${RL_SWARM_REF:-main}
 RL_SWARM_REPO=${RL_SWARM_REPO:-https://github.com/gensyn-ai/rl-swarm}
@@ -41,12 +39,7 @@ for ((i=1; i<=N; i++)); do
   $SVC:
 EOB
 
-  if [ "$USE_PREBUILT" -eq 1 ]; then
-    cat >> docker-compose.yml <<EOB
-    image: $IMAGE_PREBUILT
-EOB
-  else
-    cat >> docker-compose.yml <<EOB
+  cat >> docker-compose.yml <<EOB
     image: $IMAGE_LOCAL_TAG
     build:
       context: .
@@ -55,7 +48,6 @@ EOB
         RL_SWARM_REF: "$RL_SWARM_REF"
         RL_SWARM_REPO: "$RL_SWARM_REPO"
 EOB
-  fi
 
   cat >> docker-compose.yml <<EOB
     container_name: gensyn-test$i
@@ -95,8 +87,6 @@ set -euo pipefail
 SERVICE=$SVC
 CONTAINER=bootstrap-\$SERVICE
 IDENT_DIR=./identities/\$SERVICE
-USE_PREBUILT=$USE_PREBUILT
-IMAGE_PREBUILT=$IMAGE_PREBUILT
 IMAGE_LOCAL_TAG=$IMAGE_LOCAL_TAG
 P2P_PORT=$PORT
 
@@ -110,8 +100,6 @@ fi
 
 echo "🔄 No identity found: bootstrapping \$SERVICE via 'docker run'…"
 
-IMAGE_TO_RUN=\$([ "\$USE_PREBUILT" -eq 1 ] && echo "\$IMAGE_PREBUILT" || echo "\$IMAGE_LOCAL_TAG")
-
 docker run -d --name "\$CONTAINER" \
   -e CPU_ONLY=1 \
   -e NON_INTERACTIVE=1 \
@@ -123,7 +111,7 @@ docker run -d --name "\$CONTAINER" \
   -e P2P_PORT=\$P2P_PORT \
   -p \$P2P_PORT:\$P2P_PORT \
   -v "\$(pwd)/data/\$SERVICE/modal-login/temp-data":/opt/rl-swarm/modal-login/temp-data \
-  \$IMAGE_TO_RUN \
+  \$IMAGE_LOCAL_TAG \
   bash -c './run_rl_swarm.sh'
 
 echo "⏳ Waiting for /opt/rl-swarm/swarm.pem in \$CONTAINER…"
