@@ -270,8 +270,8 @@ else
     install_gpu_requirements
 
     case "$PARAM_B" in
-        32 | 72) CONFIG_PATH="$ROOT/hivemind_exp/configs/gpu/grpo-qwen-2.5-${PARAM_B}b-bnb-4bit-deepseek-r1.yaml" && break ;;
-        0.5 | 1.5 | 7) CONFIG_PATH="$ROOT/hivemind_exp/configs/gpu/grpo-qwen-2.5-${PARAM_B}b-deepseek-r1.yaml" && break ;;
+        32 | 72) CONFIG_PATH="$ROOT/hivemind_exp/configs/gpu/grpo-qwen-2.5-${PARAM_B}b-bnb-4bit-deepseek-r1.yaml" ;;
+        0.5 | 1.5 | 7) CONFIG_PATH="$ROOT/hivemind_exp/configs/gpu/grpo-qwen-2.5-${PARAM_B}b-deepseek-r1.yaml" ;;
         *)  echo ">>> Please answer in [0.5, 1.5, 7, 32, 72]." ;;
     esac
     if [ "$USE_BIG_SWARM" = true ]; then
@@ -305,23 +305,37 @@ echo_green ">> Good luck in the swarm!"
 echo_blue ">> Post about rl-swarm on X/twitter! --> https://tinyurl.com/swarmtweet"
 echo_blue ">> And remember to star the repo on GitHub! --> https://github.com/gensyn-ai/rl-swarm"
 
-if [ -n "$ORG_ID" ]; then
-    python -m hivemind_exp.gsm8k.train_single_gpu \
-        --hf_token "$HUGGINGFACE_ACCESS_TOKEN" \
-        --identity_path "$IDENTITY_PATH" \
-        --modal_org_id "$ORG_ID" \
-        --contract_address "$SWARM_CONTRACT" \
-        --config "$CONFIG_PATH" \
-        --game "$GAME"
+LAUNCH_OFFICIAL=${LAUNCH_OFFICIAL:-1}
+if [ "$LAUNCH_OFFICIAL" = "1" ] && command -v rlswarm_official.sh >/dev/null 2>&1; then
+    echo_green ">> Launching official rl-swarm script"
+    # Environment expected by official script
+    export HOST_MULTI_ADDRS
+    export IDENTITY_PATH
+    export CPU_ONLY
+    export ORG_ID
+    export CONNECT_TO_TESTNET
+    export HF_TOKEN="$HUGGINGFACE_ACCESS_TOKEN"
+    exec rlswarm_official.sh
 else
-    python -m hivemind_exp.gsm8k.train_single_gpu \
-        --hf_token "$HUGGINGFACE_ACCESS_TOKEN" \
-        --identity_path "$IDENTITY_PATH" \
-        --public_maddr "$PUB_MULTI_ADDRS" \
-        --initial_peers "$PEER_MULTI_ADDRS" \
-        --host_maddr "$HOST_MULTI_ADDRS" \
-        --config "$CONFIG_PATH" \
-        --game "$GAME"
+    echo_green ">> Launching compatibility path (direct module)"
+    if [ -n "$ORG_ID" ]; then
+        python -m hivemind_exp.gsm8k.train_single_gpu \
+            --hf_token "$HUGGINGFACE_ACCESS_TOKEN" \
+            --identity_path "$IDENTITY_PATH" \
+            --modal_org_id "$ORG_ID" \
+            --contract_address "$SWARM_CONTRACT" \
+            --config "$CONFIG_PATH" \
+            --game "$GAME"
+    else
+        python -m hivemind_exp.gsm8k.train_single_gpu \
+            --hf_token "$HUGGINGFACE_ACCESS_TOKEN" \
+            --identity_path "$IDENTITY_PATH" \
+            --public_maddr "$PUB_MULTI_ADDRS" \
+            --initial_peers "$PEER_MULTI_ADDRS" \
+            --host_maddr "$HOST_MULTI_ADDRS" \
+            --config "$CONFIG_PATH" \
+            --game "$GAME"
+    fi
 fi
 
 wait  # Keep script running until Ctrl+C

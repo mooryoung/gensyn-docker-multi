@@ -37,6 +37,10 @@ RUN set -eux; \
     dest=/opt/rl-swarm/hivemind_exp/configs/mac/grpo-qwen-2.5-0.5b-deepseek-r1.yaml; \
     if [ -d "$(dirname "$dest")" ]; then cp /tmp/grpo-qwen-0.5b-cpu.yaml "$dest" || true; fi
 
+# 5b) Preserve official launcher path before host bind-mount overrides it
+RUN cp /opt/rl-swarm/run_rl_swarm.sh /usr/local/bin/rlswarm_official.sh || true \
+ && chmod +x /usr/local/bin/rlswarm_official.sh || true
+
 # 6) Create virtual env and install dependencies
 RUN python3 -m venv .venv \
  && . .venv/bin/activate \
