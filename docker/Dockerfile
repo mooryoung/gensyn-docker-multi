@@ -23,6 +23,11 @@ RUN mkdir -p /usr/share/keyrings \
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
  && apt-get update && apt-get install -y --no-install-recommends nodejs yarn
 
+# Set faster registries for China/mainland networks
+RUN yarn config set registry https://registry.npmmirror.com -g \
+ && yarn config set network-timeout 600000 -g \
+ && npm config set registry https://registry.npmmirror.com
+
 # 4) Clone rl-swarm (trackable)
 ARG RL_SWARM_REPO=https://github.com/gensyn-ai/rl-swarm
 ARG RL_SWARM_REF=main
