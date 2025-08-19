@@ -46,11 +46,7 @@ RUN python3 -m venv .venv \
     if [ -f hivemind_exp/runner/grpo_runner.py ]; then \
       sed -i 's|dht = hivemind.DHT(start=True, startup_timeout=30, \*\*self._dht_kwargs(grpo_args))|dht = hivemind.DHT(start=True, ensure_bootstrap_success=False, startup_timeout=120, **self._dht_kwargs(grpo_args))|' hivemind_exp/runner/grpo_runner.py || true; \
     fi; \
-    SP=$(python - <<'PY' 2>/dev/null || true
-import sysconfig
-print(sysconfig.get_paths().get('purelib',''))
-PY
-); \
+    SP=$(python -c "import sysconfig; print(sysconfig.get_paths().get('purelib',''))" 2>/dev/null || true); \
     if [ -n "$SP" ] && [ -f "$SP/hivemind/p2p/p2p_daemon.py" ]; then \
       sed -i 's|idle_timeout: float = 30|idle_timeout: float = 120|' "$SP/hivemind/p2p/p2p_daemon.py" || true; \
       sed -i 's|startup_timeout: float = 15|startup_timeout: float = 120|' "$SP/hivemind/p2p/p2p_daemon.py" || true; \
