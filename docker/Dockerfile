@@ -74,31 +74,31 @@ RUN python3 -m venv .venv \
 # Ensure package is importable if rl-swarm uses src layout
 ENV PYTHONPATH=/opt/rl-swarm
 
-# 7) Install modal-login UI dependencies with multi-registry + 3m per attempt
+# 7) Install modal-login UI dependencies (npm-first, npmmirror, retries, 180s per attempt)
 WORKDIR /opt/rl-swarm/modal-login
 RUN set -eux; \
-    registries="https://registry.npmmirror.com https://registry.yarnpkg.com https://registry.npmjs.org"; \
-    yarn config set network-timeout 180000 -g; \
+    npm config set registry https://registry.npmmirror.com; \
+    npm config set fund false; npm config set audit false; \
     success=0; \
-    for reg in $registries; do \
-      echo "Trying yarn registry: $reg"; \
-      yarn config set registry "$reg" -g; \
-      npm config set registry "$reg"; \
-      if timeout 180s yarn install --network-timeout 180000 --no-progress --registry "$reg"; then success=1; break; fi; \
+    for i in 1 2 3; do \
+      echo "npm install attempt $i ..."; \
+      if timeout 180s npm install --no-audit --no-fund --legacy-peer-deps --no-optional; then success=1; break; fi; \
+      sleep 3; \
     done; \
     if [ $success -eq 0 ]; then \
-      for reg in $registries; do \
-        echo "Falling back to npm with registry: $reg"; \
-        npm config set registry "$reg"; \
-        if timeout 180s npm install --no-audit --no-fund --legacy-peer-deps; then success=1; break; fi; \
-        echo "Trying cnpm with registry: $reg"; \
-        if timeout 180s cnpm install --by=npm; then success=1; break; fi; \
+      echo "npm failed, trying yarn (with npmmirror) ..."; \
+      yarn config set registry https://registry.npmmirror.com -g; \
+      yarn config set network-timeout 180000 -g; \
+      for i in 1 2 3; do \
+        echo "yarn install attempt $i ..."; \
+        if timeout 180s yarn install --no-progress --ignore-optional; then success=1; break; fi; \
+        sleep 3; \
       done; \
     fi; \
-    if [ $success -eq 0 ]; then echo "Dependency install failed across registries"; exit 1; fi; \
-    # Ensure specific packages/versions (also with 3m timeout + fallback)
-    (timeout 180s yarn add viem@2.25.0 --exact || timeout 180s npm install viem@2.25.0 --save-exact) || true; \
-    (timeout 180s yarn add next@latest --exact || timeout 180s npm install next@latest --save-exact) || true
+    if [ $success -eq 0 ]; then echo "Dependency install failed after retries"; exit 1; fi; \
+    # Pin/ensure specific packages after base install
+    (timeout 180s npm install viem@2.25.0 --save-exact || timeout 180s yarn add viem@2.25.0 --exact) || true; \
+    (timeout 180s npm install next@latest --save-exact || timeout 180s yarn add next@latest --exact) || true
 
 # 8) Copy entrypoint
 WORKDIR /opt/rl-swarm
