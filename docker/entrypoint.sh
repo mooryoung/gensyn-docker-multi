@@ -26,5 +26,5 @@ source .venv/bin/activate
 
 
 
-# ----- auto-reply to interactive setup -----
-printf "Y\nA\n0.5\nN\n" | ./run_rl_swarm.sh 
+# Launch RL-Swarm launcher (wrapper may be mounted over this path)
+./run_rl_swarm.sh

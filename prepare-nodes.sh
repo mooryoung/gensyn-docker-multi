@@ -14,7 +14,13 @@ fi
 N=$1
 BASE_PORT=38331
 CORES_PER_NODE=20
-IMAGE="ghcr.io/ashishki/gensyn-node:cpu-2.7.8"
+
+# Build options
+USE_PREBUILT=${USE_PREBUILT:-0}
+IMAGE_PREBUILT=${IMAGE_PREBUILT:-ghcr.io/ashishki/gensyn-node:cpu-2.7.8}
+IMAGE_LOCAL_TAG=${IMAGE_LOCAL_TAG:-gensyn-node:local}
+RL_SWARM_REF=${RL_SWARM_REF:-main}
+RL_SWARM_REPO=${RL_SWARM_REPO:-https://github.com/gensyn-ai/rl-swarm}
 
 cat > docker-compose.yml <<EOF
 version: "3.9"
@@ -34,12 +40,36 @@ for ((i=1; i<=N; i++)); do
   # B) Append the service block
   cat >> docker-compose.yml <<EOB
   $SVC:
-    image: $IMAGE
+EOB
+
+  if [ "$USE_PREBUILT" -eq 1 ]; then
+    cat >> docker-compose.yml <<EOB
+    image: $IMAGE_PREBUILT
+EOB
+  else
+    cat >> docker-compose.yml <<EOB
+    image: $IMAGE_LOCAL_TAG
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        RL_SWARM_REF: "$RL_SWARM_REF"
+        RL_SWARM_REPO: "$RL_SWARM_REPO"
+EOB
+  fi
+
+  cat >> docker-compose.yml <<EOB
     container_name: gensyn-test$i
 
     environment:
       - P2P_PORT=$PORT
       - CPU_ONLY=1
+      - NON_INTERACTIVE=1
+      - JOIN_TESTNET=true
+      - DISABLE_MODAL_LOGIN=1
+      - DISABLE_HF_PUSH=1
+      - SWARM=A
+      - PARAM_B=0.5
 
     volumes:
       - "./data/$SVC/modal-login/temp-data:/opt/rl-swarm/modal-login/temp-data"
@@ -66,7 +96,9 @@ set -euo pipefail
 SERVICE=$SVC
 CONTAINER=bootstrap-\$SERVICE
 IDENT_DIR=./identities/\$SERVICE
-IMAGE=$IMAGE
+USE_PREBUILT=$USE_PREBUILT
+IMAGE_PREBUILT=$IMAGE_PREBUILT
+IMAGE_LOCAL_TAG=$IMAGE_LOCAL_TAG
 P2P_PORT=$PORT
 
 mkdir -p "\$IDENT_DIR"
@@ -79,13 +111,21 @@ fi
 
 echo "🔄 No identity found: bootstrapping \$SERVICE via 'docker run'…"
 
-docker run -d --name "\$CONTAINER" \\
-  -e CPU_ONLY=1 \\
-  -e P2P_PORT=\$P2P_PORT \\
-  -p \$P2P_PORT:\$P2P_PORT \\
-  -v "\$(pwd)/data/\$SERVICE/modal-login/temp-data":/opt/rl-swarm/modal-login/temp-data \\
-  \$IMAGE \\
-  bash -c 'source .venv/bin/activate && printf "Y\nA\n0.5\nN\n" | ./run_rl_swarm.sh'
+IMAGE_TO_RUN=\$([ "\$USE_PREBUILT" -eq 1 ] && echo "\$IMAGE_PREBUILT" || echo "\$IMAGE_LOCAL_TAG")
+
+docker run -d --name "\$CONTAINER" \
+  -e CPU_ONLY=1 \
+  -e NON_INTERACTIVE=1 \
+  -e JOIN_TESTNET=true \
+  -e DISABLE_MODAL_LOGIN=1 \
+  -e DISABLE_HF_PUSH=1 \
+  -e SWARM=A \
+  -e PARAM_B=0.5 \
+  -e P2P_PORT=\$P2P_PORT \
+  -p \$P2P_PORT:\$P2P_PORT \
+  -v "\$(pwd)/data/\$SERVICE/modal-login/temp-data":/opt/rl-swarm/modal-login/temp-data \
+  \$IMAGE_TO_RUN \
+  bash -c './run_rl_swarm.sh'
 
 echo "⏳ Waiting for /opt/rl-swarm/swarm.pem in \$CONTAINER…"
 while ! docker exec "\$CONTAINER" test -f /opt/rl-swarm/swarm.pem; do

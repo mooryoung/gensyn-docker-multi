@@ -13,38 +13,54 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       nano
 
 # 2) Add Yarn’s GPG key & repo
-RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
-    echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list
+RUN mkdir -p /usr/share/keyrings \
+ && curl -fsSL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor -o /usr/share/keyrings/yarn.gpg \
+ && echo "deb [signed-by=/usr/share/keyrings/yarn.gpg] https://dl.yarnpkg.com/debian stable main" > /etc/apt/sources.list.d/yarn.list
 
 # 3) Add Node.js 20.x
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-RUN apt-get update && apt-get install -y --no-install-recommends nodejs yarn
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+ && apt-get update && apt-get install -y --no-install-recommends nodejs yarn
 
-# 4) Clone rl-swarm at specific commit
-RUN git clone https://github.com/gensyn-ai/rl-swarm /opt/rl-swarm && \
-    cd /opt/rl-swarm && \
-    git checkout 385e0b3
+# 4) Clone rl-swarm (trackable)
+ARG RL_SWARM_REPO=https://github.com/gensyn-ai/rl-swarm
+ARG RL_SWARM_REF=main
+RUN git clone "$RL_SWARM_REPO" /opt/rl-swarm \
+ && cd /opt/rl-swarm \
+ && git fetch --all --tags \
+ && git checkout "$RL_SWARM_REF"
 
 WORKDIR /opt/rl-swarm
 
-# 5) Override config
-COPY docker/grpo-qwen-0.5b-cpu.yaml \
-     /opt/rl-swarm/hivemind_exp/configs/mac/grpo-qwen-2.5-0.5b-deepseek-r1.yaml
+# 5) Override config (kept for convenience; harmless if path changes)
+COPY docker/grpo-qwen-0.5b-cpu.yaml /tmp/grpo-qwen-0.5b-cpu.yaml
+RUN set -eux; \
+    dest=/opt/rl-swarm/hivemind_exp/configs/mac/grpo-qwen-2.5-0.5b-deepseek-r1.yaml; \
+    if [ -d "$(dirname "$dest")" ]; then cp /tmp/grpo-qwen-0.5b-cpu.yaml "$dest" || true; fi
 
 # 6) Create virtual env and install dependencies
-RUN python3 -m venv .venv && \
-    . .venv/bin/activate && \
-    pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements-cpu.txt && \
-    # 6a) Patch grpo_runner.py
-    sed -i 's|dht = hivemind.DHT(start=True, startup_timeout=30, \*\*self._dht_kwargs(grpo_args))|dht = hivemind.DHT(start=True, ensure_bootstrap_success=False, startup_timeout=120, **self._dht_kwargs(grpo_args))|' hivemind_exp/runner/grpo_runner.py && \
-    # 6b) Patch p2p_daemon.py inside site-packages
-    sed -i 's|idle_timeout: float = 30|idle_timeout: float = 120|' .venv/lib/python3.10/site-packages/hivemind/p2p/p2p_daemon.py && \
-    sed -i 's|startup_timeout: float = 15|startup_timeout: float = 120|' .venv/lib/python3.10/site-packages/hivemind/p2p/p2p_daemon.py
+RUN python3 -m venv .venv \
+ && . .venv/bin/activate \
+ && pip install --upgrade pip \
+ && pip install --no-cache-dir -r requirements-cpu.txt \
+ && set -eux; \
+    if [ -f hivemind_exp/runner/grpo_runner.py ]; then \
+      sed -i 's|dht = hivemind.DHT(start=True, startup_timeout=30, \*\*self._dht_kwargs(grpo_args))|dht = hivemind.DHT(start=True, ensure_bootstrap_success=False, startup_timeout=120, **self._dht_kwargs(grpo_args))|' hivemind_exp/runner/grpo_runner.py || true; \
+    fi; \
+    SP=$(python - <<'PY' 2>/dev/null || true
+import sysconfig
+print(sysconfig.get_paths().get('purelib',''))
+PY
+); \
+    if [ -n "$SP" ] && [ -f "$SP/hivemind/p2p/p2p_daemon.py" ]; then \
+      sed -i 's|idle_timeout: float = 30|idle_timeout: float = 120|' "$SP/hivemind/p2p/p2p_daemon.py" || true; \
+      sed -i 's|startup_timeout: float = 15|startup_timeout: float = 120|' "$SP/hivemind/p2p/p2p_daemon.py" || true; \
+    fi
 
 # 7) Install modal-login UI dependencies
 WORKDIR /opt/rl-swarm/modal-login
-RUN yarn install
+RUN yarn install \
+ && yarn add viem@2.25.0 --exact \
+ && yarn add next@latest --exact || true
 
 # 8) Copy entrypoint
 WORKDIR /opt/rl-swarm

@@ -1,7 +1,15 @@
 set -euo pipefail
 
-sed -i 's/startup_timeout: float = 15/startup_timeout: float = 120/' .venv/lib/python3.10/site-packages/hivemind/p2p/p2p_daemon.py
-find .venv/lib/python3.10/site-packages/hivemind/ -name "*.pyc" -delete
+# Best-effort: relax hivemind timeouts if present
+PY_SITE=$(python - <<'PY' 2>/dev/null || true
+import sysconfig
+print(sysconfig.get_paths().get('purelib',''))
+PY
+)
+if [ -n "${PY_SITE}" ] && [ -f "${PY_SITE}/hivemind/p2p/p2p_daemon.py" ]; then
+  sed -i 's/startup_timeout: float = 15/startup_timeout: float = 120/' "${PY_SITE}/hivemind/p2p/p2p_daemon.py" || true
+  find "${PY_SITE}/hivemind/" -name "*.pyc" -delete || true
+fi
 
 
 ROOT="$PWD"
@@ -84,46 +92,63 @@ cat << "EOF"
 
 EOF
 
-while true; do
-    echo -en $GREEN_TEXT
-    read -p ">> Would you like to connect to the Testnet? [Y/n] " yn
-    echo -en $RESET_TEXT
-    yn=${yn:-Y}  # Default to "Y" if the user presses Enter
-    case $yn in
-        [Yy]*)  CONNECT_TO_TESTNET=true && break ;;
-        [Nn]*)  CONNECT_TO_TESTNET=false && break ;;
-        *)  echo ">>> Please answer yes or no." ;;
-    esac
-done
+NON_INTERACTIVE=${NON_INTERACTIVE:-1}
+JOIN_TESTNET=${JOIN_TESTNET:-true}
+SWARM=${SWARM:-A}
+PARAM_B=${PARAM_B:-0.5}
 
-while true; do
-    echo -en $GREEN_TEXT
-    read -p ">> Which swarm would you like to join (Math (A) or Math Hard (B))? [A/b] " ab
-    echo -en $RESET_TEXT
-    ab=${ab:-A}  # Default to "A" if the user presses Enter
-    case $ab in
-        [Aa]*)  USE_BIG_SWARM=false && break ;;
-        [Bb]*)  USE_BIG_SWARM=true && break ;;
-        *)  echo ">>> Please answer A or B." ;;
+if [ "$NON_INTERACTIVE" = "1" ]; then
+    CONNECT_TO_TESTNET=$JOIN_TESTNET
+    case "${SWARM^^}" in
+        A) USE_BIG_SWARM=false ;;
+        B) USE_BIG_SWARM=true ;;
+        *) USE_BIG_SWARM=false ;;
     esac
-done
+else
+    while true; do
+        echo -en $GREEN_TEXT
+        read -p ">> Would you like to connect to the Testnet? [Y/n] " yn
+        echo -en $RESET_TEXT
+        yn=${yn:-Y}
+        case $yn in
+            [Yy]*)  CONNECT_TO_TESTNET=true && break ;;
+            [Nn]*)  CONNECT_TO_TESTNET=false && break ;;
+            *)  echo ">>> Please answer yes or no." ;;
+        esac
+    done
+
+    while true; do
+        echo -en $GREEN_TEXT
+        read -p ">> Which swarm would you like to join (Math (A) or Math Hard (B))? [A/b] " ab
+        echo -en $RESET_TEXT
+        ab=${ab:-A}
+        case $ab in
+            [Aa]*)  USE_BIG_SWARM=false && break ;;
+            [Bb]*)  USE_BIG_SWARM=true && break ;;
+            *)  echo ">>> Please answer A or B." ;;
+        esac
+    done
+
+    while true; do
+        echo -en $GREEN_TEXT
+        read -p ">> How many parameters (in billions)? [0.5, 1.5, 7, 32, 72] " pc
+        echo -en $RESET_TEXT
+        pc=${pc:-0.5}
+        case $pc in
+            0.5 | 1.5 | 7 | 32 | 72) PARAM_B=$pc && break ;;
+            *)  echo ">>> Please answer in [0.5, 1.5, 7, 32, 72]." ;;
+        esac
+    done
+fi
+
 if [ "$USE_BIG_SWARM" = true ]; then
     SWARM_CONTRACT="$BIG_SWARM_CONTRACT"
 else
     SWARM_CONTRACT="$SMALL_SWARM_CONTRACT"
 fi
-while true; do
-    echo -en $GREEN_TEXT
-    read -p ">> How many parameters (in billions)? [0.5, 1.5, 7, 32, 72] " pc
-    echo -en $RESET_TEXT
-    pc=${pc:-0.5}  # Default to "0.5" if the user presses Enter
-    case $pc in
-        0.5 | 1.5 | 7 | 32 | 72) PARAM_B=$pc && break ;;
-        *)  echo ">>> Please answer in [0.5, 1.5, 7, 32, 72]." ;;
-    esac
-done
 
-if [ "$CONNECT_TO_TESTNET" = true ]; then
+DISABLE_MODAL_LOGIN=${DISABLE_MODAL_LOGIN:-1}
+if [ "$CONNECT_TO_TESTNET" = true ] && [ "$DISABLE_MODAL_LOGIN" != "1" ]; then
     # Run modal_login server.
     echo "Please login to create an Ethereum Server Wallet"
     cd modal-login
@@ -172,11 +197,13 @@ if [ "$CONNECT_TO_TESTNET" = true ]; then
 
     cd ..
 
-    echo_green ">> Waiting for modal userData.json to be created..."
-    while [ ! -f "modal-login/temp-data/userData.json" ]; do
-        sleep 5  # Wait for 5 seconds before checking again
-    done
-    echo "Found userData.json. Proceeding..."
+    if [ ! -f "modal-login/temp-data/userData.json" ]; then
+        echo_green ">> Waiting for modal userData.json to be created..."
+        while [ ! -f "modal-login/temp-data/userData.json" ]; do
+            sleep 5
+        done
+        echo "Found userData.json. Proceeding..."
+    fi
 
     ORG_ID=$(awk 'BEGIN { FS = "\"" } !/^[ \t]*[{}]/ { print $(NF - 1); exit }' modal-login/temp-data/userData.json)
     echo "Your ORG_ID is set to: $ORG_ID"
@@ -232,13 +259,16 @@ fi
 echo_green ">> Done!"
 
 HF_TOKEN=${HF_TOKEN:-""}
-if [ -n "${HF_TOKEN}" ]; then # Check if HF_TOKEN is already set and use if so. Else give user a prompt to choose.
+DISABLE_HF_PUSH=${DISABLE_HF_PUSH:-1}
+if [ -n "${HF_TOKEN}" ]; then
     HUGGINGFACE_ACCESS_TOKEN=${HF_TOKEN}
+elif [ "$NON_INTERACTIVE" = "1" ] && [ "$DISABLE_HF_PUSH" = "1" ]; then
+    HUGGINGFACE_ACCESS_TOKEN="None"
 else
     echo -en $GREEN_TEXT
     read -p ">> Would you like to push models you train in the RL swarm to the Hugging Face Hub? [y/N] " yn
     echo -en $RESET_TEXT
-    yn=${yn:-N} # Default to "N" if the user presses Enter
+    yn=${yn:-N}
     case $yn in
         [Yy]*) read -p "Enter your Hugging Face access token: " HUGGINGFACE_ACCESS_TOKEN ;;
         [Nn]*) HUGGINGFACE_ACCESS_TOKEN="None" ;;
