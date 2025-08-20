@@ -72,6 +72,8 @@ RUN python3 -m venv .venv \
 ENV PYTHONPATH=/opt/rl-swarm
 
 # 7) Install modal-login UI dependencies
+WORKDIR /opt/rl-swarm/modal-login
+RUN yarn install
 # WORKDIR /opt/rl-swarm/modal-login
 # RUN yarn config set network-timeout 600000 -g \
 #  && yarn install --network-timeout 600000 --prefer-offline \
