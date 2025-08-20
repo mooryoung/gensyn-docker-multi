@@ -14,9 +14,6 @@ export HF_HUB_DOWNLOAD_TIMEOUT=120  # 2 minutes
 export SWARM_CONTRACT="0xFaD7C5e93f28257429569B854151A1B8DCD404c2"
 export HUGGINGFACE_ACCESS_TOKEN="None"
 
-DEFAULT_HOST_MULTI_ADDRS="/ip4/0.0.0.0/tcp/38331"
-HOST_MULTI_ADDRS=${HOST_MULTI_ADDRS:-$DEFAULT_HOST_MULTI_ADDRS}
-
 # Path to an RSA private key. If this path does not exist, a new key pair will be created.
 # Remove this file if you want a new PeerID.
 DEFAULT_IDENTITY_PATH="$ROOT"/swarm.pem
@@ -262,7 +259,6 @@ echo_blue ">> And remember to star the repo on GitHub! --> https://github.com/ge
 
 python -m rgym_exp.runner.swarm_launcher \
     --config-path "$ROOT/rgym_exp/config" \
-    --host_maddr "$HOST_MULTI_ADDRS" \
     --config-name "rg-swarm.yaml" 
 
 wait  # Keep script running until Ctrl+C

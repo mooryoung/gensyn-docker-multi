@@ -1,5 +1,11 @@
 # Gensyn RL-Swarm Multi-Node Docker Toolkit
 
+## ⚡ 安装docker
+```bash
+ curl -fsSL https://test.docker.com -o test-docker.sh
+ sudo sh test-docker.sh
+ ```
+
 ## ⚡ 快速开始
 
 ```bash
