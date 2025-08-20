@@ -28,4 +28,4 @@ source .venv/bin/activate
 export CPU_ONLY="${CPU_ONLY:-1}"
 export CUDA_VISIBLE_DEVICES=""
 # Launch RL-Swarm launcher (upstream script). Provide empty input to skip prompts.
-printf "\n\n\n\n" | ./run_rl_swarm.sh
+exec bash ./run_rl_swarm.sh
