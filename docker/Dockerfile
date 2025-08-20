@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
  && git lfs install || true
 
 # 2) Add Yarn’s GPG key & repo
-RUN mkdir -p /usr/share/keyrings \
+# RUN mkdir -p /usr/share/keyrings \
 #  && curl -fsSL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor -o /usr/share/keyrings/yarn.gpg \
 #  && echo "deb [signed-by=/usr/share/keyrings/yarn.gpg] https://dl.yarnpkg.com/debian stable main" > /etc/apt/sources.list.d/yarn.list
  RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
